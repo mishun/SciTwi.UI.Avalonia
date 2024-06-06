@@ -1,0 +1,23 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>SciTwi.UI.Controls</RootNamespace>
+    <Platforms>AnyCPU</Platforms>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <AdditionalFiles Include="**\*.xaml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="0.10.22" />
+    <PackageReference Include="Avalonia.Desktop" Version="0.10.22" />
+    <PackageReference Include="Avalonia.ReactiveUI" Version="0.10.22" />
+    <PackageReference Include="NLog" Version="5.3.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../SciTwi.UI.Rendering/SciTwi.UI.Rendering.fsproj" />
+  </ItemGroup>
+</Project>
