@@ -11,8 +11,8 @@ namespace SciTwi.UI.Controls.Plotting
 {
     public sealed class OverlayItems : OverlayBase
     {
-        public static readonly DirectProperty<OverlayItems, IEnumerable> ItemsProperty =
-            AvaloniaProperty.RegisterDirect<OverlayItems, IEnumerable>
+        public static readonly DirectProperty<OverlayItems, IEnumerable?> ItemsProperty =
+            AvaloniaProperty.RegisterDirect<OverlayItems, IEnumerable?>
                 (nameof(Items), o => o.Items, (o, v) => o.Items = v);
 
 
@@ -22,15 +22,15 @@ namespace SciTwi.UI.Controls.Plotting
         }
 
 
-        public OverlayTemplates OverlayTemplates { get; } = new OverlayTemplates();
+        public OverlayTemplates OverlayTemplates { get; } = [];
 
 
-        private IEnumerable items;
-        private IDisposable itemsSubscription;
-        private readonly List<OverlayBase> layers = new();
+        private IEnumerable? items;
+        private IDisposable? itemsSubscription;
+        private readonly List<OverlayBase?> layers = new();
 
         [Content]
-        public IEnumerable Items
+        public IEnumerable? Items
         {
             get => this.items;
             set
@@ -72,7 +72,7 @@ namespace SciTwi.UI.Controls.Plotting
             this.NotifyReRender();
         }
 
-        private void RegenerateLayers(IEnumerable items)
+        private void RegenerateLayers(IEnumerable? items)
         {
             this.layers.Clear();
 

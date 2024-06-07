@@ -1,0 +1,14 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:preview="clr-namespace:MigraDocCore.Avalonia;assembly=MigraDocCore.Rendering.Avalonia"
+        x:Class="SciTwi.Avalonia.MainWindow"
+        Title="Samples"
+        
+        xmlns:plot="clr-namespace:SciTwi.UI.Controls.Plotting;assembly=SciTwi.UI.Avalonia">
+
+    <plot:PlotOverlayHost>
+      <plot:OverlayGroup>
+        <plot:OverlaySeries Fill="Red" Points="{Binding Points}" />
+      </plot:OverlayGroup>
+    </plot:PlotOverlayHost>
+</Window>

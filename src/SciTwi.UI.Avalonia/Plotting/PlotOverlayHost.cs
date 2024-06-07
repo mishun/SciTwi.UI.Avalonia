@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
@@ -12,7 +13,7 @@ namespace SciTwi.UI.Controls.Plotting
 {
     public class PlotOverlayHost : Control
     {
-        public static readonly StyledProperty<IBrush> BackgroundProperty =
+        public static readonly StyledProperty<IBrush?> BackgroundProperty =
             Border.BackgroundProperty.AddOwner<PlotOverlayHost>();
 
         public static readonly StyledProperty<CanvasTransform> CanvasTransformProperty =
@@ -52,6 +53,13 @@ namespace SciTwi.UI.Controls.Plotting
                 if (args.NewValue is Rect bounds)
                     host?.CanvasTransform?.UpdateMatrix(bounds);
             });
+
+            CanvasTransformProperty.Changed.AddClassHandler<PlotOverlayHost>((host, args) => {
+                if(args.OldValue is IMutableTransform oldTransform)
+                    oldTransform.Changed -= host.OnCanvasTransformModified;
+                if(args.NewValue is IMutableTransform newTransform)
+                    newTransform.Changed += host.OnCanvasTransformModified;
+            });
         }
 
         public PlotOverlayHost()
@@ -64,7 +72,13 @@ namespace SciTwi.UI.Controls.Plotting
         }
 
 
-        public IBrush Background
+        private void OnCanvasTransformModified(object s, EventArgs args)
+        {
+            base.InvalidateVisual();
+        }
+
+
+        public IBrush? Background
         {
             get => base.GetValue(BackgroundProperty);
             set => base.SetValue(BackgroundProperty, value);
@@ -99,17 +113,13 @@ namespace SciTwi.UI.Controls.Plotting
 
         public override void Render(DrawingContext context)
         {
-            var background = this.Background;
-            if (!(background is null))
-            {
-                var renderSize = Bounds.Size;
-                context.FillRectangle(background, new Rect(renderSize));
-            }
+            var bounds = new Rect(0.0, 0.0, this.Bounds.Width, this.Bounds.Height);
+            if (this.Background is IBrush background)
+                context.FillRectangle(background, bounds);
 
             var canvasTransform = this.CanvasTransform;
-            if (!(canvasTransform is null))
+            if (canvasTransform is not null)
             {
-                var bounds = new Rect(0.0, 0.0, this.Bounds.Width, this.Bounds.Height);
                 var matrix = canvasTransform.Matrix;
                 var dims = canvasTransform.GridStep(Math.Max(10.0, this.TargetGridSpacing), bounds);
                 Rendering.Plotting.ScaleGrid.renderScaleGrid(context, dims, matrix, this.gridPens);
@@ -123,8 +133,8 @@ namespace SciTwi.UI.Controls.Plotting
 
                     var diff = b - a;
                     var text = $"d = {Math.Sqrt(diff.X * diff.X + diff.Y * diff.Y):N2}\nΔx = {diff.X:N2}\nΔy = {diff.Y:N2}";
-                    var ft = new FormattedText() { Text = text, FontSize = 12, Typeface = typeface };
-                    context.DrawText(Brushes.Black, new Point(10, 35), ft);
+                    var ft = new FormattedText(text, CultureInfo.CurrentUICulture, FlowDirection.LeftToRight, typeface, 12.0, Brushes.Black);
+                    context.DrawText(ft, new Point(10, 35));
                 }
             }
 

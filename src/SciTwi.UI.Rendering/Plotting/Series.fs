@@ -3,13 +3,14 @@
 open System
 open Avalonia
 open Avalonia.Media
+open Avalonia.Platform
 open Avalonia.Rendering.SceneGraph
 open Avalonia.Skia
 open SkiaSharp
 
 
 let render (canvas : SKCanvas, bounds : Rect, transform : Matrix, color : Color, points : Point[]) =
-    canvas.Save () |> ignore
+    canvas.Save() |> ignore
     canvas.ClipRect (bounds.ToSKRect ())
 
     do
@@ -22,7 +23,7 @@ let render (canvas : SKCanvas, bounds : Rect, transform : Matrix, color : Color,
             canvas.DrawRect (marker, paint)
             canvas.SetMatrix save
 
-    canvas.Restore ()
+    canvas.Restore()
 
 
 type SkiaSeriesRenderOp (bounds : Rect, transform : Matrix, color : Color, points : Point[]) =
@@ -30,17 +31,17 @@ type SkiaSeriesRenderOp (bounds : Rect, transform : Matrix, color : Color, point
         member __.Dispose () = ()
 
     interface IEquatable<ICustomDrawOperation> with
-        member __.Equals _ = false
+        member this.Equals that =
+            obj.ReferenceEquals(this, that)
 
-    interface IDrawOperation with
+    interface ICustomDrawOperation with
         member __.Bounds = bounds
 
         member __.HitTest _ = false
 
         member __.Render context =
-            match context with
-                | :? ISkiaDrawingContextImpl as context ->
-                    render (context.SkCanvas, bounds, transform, color, points)
-                | _ -> ()
-
-    interface ICustomDrawOperation
+            match context.TryGetFeature<ISkiaSharpApiLeaseFeature>() with
+            | null -> ()
+            | leaseFeature ->
+                use lease = leaseFeature.Lease()
+                render(lease.SkCanvas, bounds, transform, color, points)

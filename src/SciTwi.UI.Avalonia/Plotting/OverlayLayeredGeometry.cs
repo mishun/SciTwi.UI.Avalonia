@@ -9,15 +9,15 @@ namespace SciTwi.UI.Controls.Plotting
 {
     public sealed class OverlayLayeredGeometry : OverlayBasePresenting
     {
-        public static readonly DirectProperty<OverlayLayeredGeometry, IEnumerable<LayeredGeometry>> GeometryProperty =
-            AvaloniaProperty.RegisterDirect<OverlayLayeredGeometry, IEnumerable<LayeredGeometry>>
+        public static readonly DirectProperty<OverlayLayeredGeometry, IEnumerable<LayeredGeometry>?> GeometryProperty =
+            AvaloniaProperty.RegisterDirect<OverlayLayeredGeometry, IEnumerable<LayeredGeometry>?>
                 (nameof(Geometry), o => o.Geometry, (o, v) => o.Geometry = v);
 
 
-        private IEnumerable<LayeredGeometry> geometry;
+        private IEnumerable<LayeredGeometry>? geometry;
 
         [Content]
-        public IEnumerable<LayeredGeometry> Geometry
+        public IEnumerable<LayeredGeometry>? Geometry
         {
             get => this.geometry;
             set

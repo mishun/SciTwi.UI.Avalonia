@@ -13,18 +13,18 @@ namespace SciTwi.UI.Controls.Plotting
     {
         public class ElementContext : ReactiveObject
         {
-            private V value;
-            private object parent;
+            private V? value;
+            private object? parent;
 
             private K Key { get; }
 
-            public V Value
+            public V? Value
             {
                 get => this.value;
                 set => this.RaiseAndSetIfChanged(ref this.value, value);
             }
 
-            public object Parent
+            public object? Parent
             {
                 get => this.parent;
                 set => this.RaiseAndSetIfChanged(ref this.parent, value);
@@ -40,12 +40,12 @@ namespace SciTwi.UI.Controls.Plotting
         {
             public K Key { get; set; }
             public ElementContext Context { get; set; }
-            public OverlayBase Overlay { get; set; }
+            public OverlayBase? Overlay { get; set; }
         }
 
 
-        public static readonly DirectProperty<OverlayDictionary<K, V>, IDictionary<K, V>> DictionaryProperty =
-            AvaloniaProperty.RegisterDirect<OverlayDictionary<K, V>, IDictionary<K, V>>
+        public static readonly DirectProperty<OverlayDictionary<K, V>, IDictionary<K, V>?> DictionaryProperty =
+            AvaloniaProperty.RegisterDirect<OverlayDictionary<K, V>, IDictionary<K, V>?>
                 (nameof(Dictionary), o => o.Dictionary, (o, v) => o.Dictionary = v);
 
 
@@ -55,9 +55,9 @@ namespace SciTwi.UI.Controls.Plotting
         }
 
 
-        protected Dictionary<K, Cell> cells;
-        private IDictionary<K, V> dictionary;
-        private IDisposable subscription;
+        protected Dictionary<K, Cell> cells = [];
+        private IDictionary<K, V>? dictionary;
+        private IDisposable? subscription;
 
 
         protected void UpdateLayers<L, T>(Action<L> def, Action<L, T> update, IEnumerable<(K, T)> values)
@@ -86,7 +86,7 @@ namespace SciTwi.UI.Controls.Plotting
         public OverlayTemplates OverlayTemplates { get; } = new OverlayTemplates();
 
 
-        public IDictionary<K, V> Dictionary
+        public IDictionary<K, V>? Dictionary
         {
             get => this.dictionary;
             set
@@ -130,7 +130,7 @@ namespace SciTwi.UI.Controls.Plotting
         protected override void OnDataContextChanged(EventArgs e)
         {
             base.OnDataContextChanged(e);
-            if (!(this.cells is null))
+            if (this.cells is not null)
                 foreach (var kv in this.cells)
                     kv.Value.Context.Parent = this.DataContext;
         }
@@ -149,7 +149,7 @@ namespace SciTwi.UI.Controls.Plotting
                     foreach (KeyValuePair<K, V> kv in e.NewItems)
                     {
                         var context = this.MakeElementContext(kv.Key, kv.Value);
-                        var overlay = this.OverlayTemplates.Build(kv.Value);
+                        var overlay = kv.Value is null ? null : this.OverlayTemplates.Build(kv.Value);
                         this.cells.Add(kv.Key, new Cell { Key = kv.Key, Context = context, Overlay = overlay });
                         if (!(overlay is null))
                         {
@@ -165,10 +165,11 @@ namespace SciTwi.UI.Controls.Plotting
                 case NotifyCollectionChangedAction.Remove:
                     foreach (KeyValuePair<K, V> kv in e.OldItems)
                     {
-                        var overlay = this.cells[kv.Key].Overlay;
-                        if (!(overlay is null))
+                        var overlay = this.cells?[kv.Key].Overlay;
+                        if (overlay is not null)
                             this.LogicalChildren.Remove(overlay);
-                        this.cells.Remove(kv.Key);
+                        if (this.cells is not null)
+                            this.cells.Remove(kv.Key);
                     }
                     break;
 
@@ -188,19 +189,15 @@ namespace SciTwi.UI.Controls.Plotting
             this.NotifyReRender();
         }
 
-        private void RegenerateLayers(IDictionary<K, V> data)
+        private void RegenerateLayers(IDictionary<K, V>? data)
         {
             var old = this.cells;
-            if (!(old is null))
-            {
-                this.cells = null;
-                this.LogicalChildren.Clear();
-            }
+            this.cells = new Dictionary<K, Cell>();
+            this.LogicalChildren.Clear();
 
             if (data is null || this.OverlayTemplates is null)
                 return;
 
-            this.cells = new Dictionary<K, Cell>();
             foreach (var kv in data)
             {
                 var cell = default(Cell);
@@ -212,11 +209,11 @@ namespace SciTwi.UI.Controls.Plotting
                 else
                     cell.Context.Value = kv.Value;
 
-                if (cell.Overlay is null)
+                if (cell.Overlay is null && kv.Value is not null)
                     cell.Overlay = this.OverlayTemplates.Build(kv.Value);
 
                 this.cells.Add(kv.Key, cell);
-                if (!(cell.Overlay is null))
+                if (cell.Overlay is not null)
                 {
                     cell.Overlay.DataContext = cell.Context;
                     this.LogicalChildren.Add(cell.Overlay);

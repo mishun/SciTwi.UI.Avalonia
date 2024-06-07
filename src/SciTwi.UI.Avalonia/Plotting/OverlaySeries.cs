@@ -13,8 +13,14 @@ namespace SciTwi.UI.Controls.Plotting
             if (points is null || points.Length < 1)
                 return;
 
-            if (this.Fill is SolidColorBrush brush)
-                context.Custom(new Rendering.Plotting.Series.SkiaSeriesRenderOp(bounds, transform, brush.Color, this.Points));
+            var color =
+                this.Fill switch {
+                    IImmutableSolidColorBrush b => b.Color,
+                    ISolidColorBrush b => b.Color,
+                    _ => Colors.Black
+                };
+
+            context.Custom(new Rendering.Plotting.Series.SkiaSeriesRenderOp(bounds, transform, color, points));
         }
     }
 }

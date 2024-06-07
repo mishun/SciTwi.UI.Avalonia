@@ -8,16 +8,16 @@ namespace SciTwi.UI.Controls.Plotting
     public interface IOverlayTemplate
     {
         public abstract bool Match(object data);
-        public abstract OverlayBase Build(object data);
+        public abstract OverlayBase? Build(object data);
     }
 
     public class OverlayTemplate : IOverlayTemplate
     {
         [Content]
         [TemplateContent(TemplateResultType = typeof(OverlayBase))]
-        public object Content { get; set; }
+        public object? Content { get; set; }
 
-        public Type DataType { get; set; }
+        public Type? DataType { get; set; }
 
         public bool Match(object data)
         {
@@ -26,11 +26,11 @@ namespace SciTwi.UI.Controls.Plotting
             return true;
         }
 
-        public OverlayBase Build(object data)
+        public OverlayBase? Build(object data)
         {
             switch (this.Content)
             {
-                case Func<IServiceProvider, object> direct:
+                case Func<IServiceProvider?, object> direct:
                     var instatiated = direct(null);
                     return (instatiated as TemplateResult<OverlayBase>)?.Result;
 
@@ -50,7 +50,7 @@ namespace SciTwi.UI.Controls.Plotting
             return false;
         }
 
-        public OverlayBase Build(object data)
+        public OverlayBase? Build(object data)
         {
             foreach (var template in this)
                 if (template?.Match(data) == true)

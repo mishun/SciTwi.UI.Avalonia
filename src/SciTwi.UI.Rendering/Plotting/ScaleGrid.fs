@@ -1,6 +1,7 @@
 ﻿module SciTwi.UI.Rendering.Plotting.ScaleGrid
 
 open System
+open System.Globalization
 open Avalonia
 open Avalonia.Media
 open SciTwi.UI.Rendering
@@ -77,8 +78,8 @@ let renderScaleRuler (context : DrawingContext, dim : inref<ScaleGridDims>, pens
     context.DrawRectangle (pens.RulerPen, Rect(0.0, 0.0, 1.0, 1.0).TransformToAABB rulerT)
 
     let placeLabel text (p : Point) =
-        let ft = FormattedText (Text = text, Typeface = typeface, FontSize = 12.0)
-        context.DrawText (pens.RulerBrush, p.Transform rulerT - Point (0.5 * ft.Bounds.Width, 0.0), ft)
+        let ft = FormattedText(text, CultureInfo.CurrentUICulture, FlowDirection.LeftToRight, typeface, 12.0, pens.RulerBrush) // (Text = text, Typeface = typeface, FontSize = 12.0)
+        context.DrawText(ft, p.Transform rulerT - Point (0.5 * ft.Width, 0.0))
 
     Point (0.0, 1.0) |> placeLabel "0"
     Point (1.0, 1.0) |> placeLabel (dim.CoarseStepX.ToString ())

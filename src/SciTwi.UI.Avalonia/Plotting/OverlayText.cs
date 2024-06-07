@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Reactive.Linq;
+using System.Globalization;
 using Avalonia;
 using Avalonia.Media;
 using Avalonia.Metadata;
@@ -95,26 +95,26 @@ namespace SciTwi.UI.Controls.Plotting
                 return;
 
             var typeface = new Typeface(this.FontFamily, this.FontStyle, this.FontWeight);
-            var ft = new FormattedText() { Text = text, Typeface = typeface, FontSize = this.FontSize };
+            var ft = new FormattedText(text, CultureInfo.CurrentUICulture, FlowDirection.LeftToRight, typeface, this.FontSize, this.Fill);
 
             var reference = this.Reference.Transform(matrix);
             var (dx, dy) = AnchorOffset(this.Anchor, ft);
-            context.DrawText(this.Fill, new Point(reference.X + dx, reference.Y + dy), ft);
+            context.DrawText(ft, new Point(reference.X + dx, reference.Y + dy));
         }
 
         private static (double, double) AnchorOffset(TextAnchor anchor, FormattedText ft)
         {
             return anchor switch
             {
-                TextAnchor.BottomLeft => (0.0, -ft.Bounds.Height),
-                TextAnchor.BottomCenter => (-0.5 * ft.Bounds.Width, -ft.Bounds.Height),
-                TextAnchor.BottomRight => (-ft.Bounds.Width, -ft.Bounds.Height),
-                TextAnchor.CenterLeft => (0.0, -0.5 * ft.Bounds.Height),
-                TextAnchor.CenterCenter => (-0.5 * ft.Bounds.Width, -0.5 * ft.Bounds.Height),
-                TextAnchor.CenterRight => (-ft.Bounds.Width, -0.5 * ft.Bounds.Height),
+                TextAnchor.BottomLeft => (0.0, -ft.Height),
+                TextAnchor.BottomCenter => (-0.5 * ft.Width, -ft.Height),
+                TextAnchor.BottomRight => (-ft.Width, -ft.Height),
+                TextAnchor.CenterLeft => (0.0, -0.5 * ft.Height),
+                TextAnchor.CenterCenter => (-0.5 * ft.Width, -0.5 * ft.Height),
+                TextAnchor.CenterRight => (-ft.Width, -0.5 * ft.Height),
                 TextAnchor.TopLeft => (0.0, 0.0),
-                TextAnchor.TopCenter => (-0.5 * ft.Bounds.Width, 0.0),
-                TextAnchor.TopRight => (-ft.Bounds.Width, 0.0),
+                TextAnchor.TopCenter => (-0.5 * ft.Width, 0.0),
+                TextAnchor.TopRight => (-ft.Width, 0.0),
                 _ => (0.0, 0.0),
             };
         }

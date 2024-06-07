@@ -7,18 +7,18 @@ namespace SciTwi.UI.Controls.Plotting
 {
     public sealed class OverlayContent : OverlayBase
     {
-        public static readonly DirectProperty<OverlayContent, object> ContentProperty =
-            AvaloniaProperty.RegisterDirect<OverlayContent, object>
+        public static readonly DirectProperty<OverlayContent, object?> ContentProperty =
+            AvaloniaProperty.RegisterDirect<OverlayContent, object?>
                 (nameof(Content), o => o.Content, (o, v) => o.Content = v);
 
-        private OverlayTemplates _overlayTemplates;
+        private OverlayTemplates? _overlayTemplates;
         public OverlayTemplates OverlayTemplates => _overlayTemplates ??= new OverlayTemplates();
 
 
-        private object content;
+        private object? content;
 
         [Content]
-        public object Content
+        public object? Content
         {
             get => this.content;
             set
@@ -26,17 +26,25 @@ namespace SciTwi.UI.Controls.Plotting
                 if (value == this.content)
                     return;
 
-                if (this.content is null || !this.content.GetType().IsInstanceOfType(value))
-                    this.LogicChild = this.OverlayTemplates.Build(value);
-                this.content = value;
-                if (!(this.LogicChild is null))
-                    this.LogicChild.DataContext = value;
+                if (value is null)
+                {
+                    this.content = null;
+                    this.LogicChild = null;
+                }
+                else
+                {
+                    if (this.content is null || !this.content.GetType().IsInstanceOfType(value))
+                        this.LogicChild = this.OverlayTemplates.Build(value);
+                    this.content = value;
+                    if (this.LogicChild is not null)
+                        this.LogicChild.DataContext = value;
+                }
             }
         }
 
 
-        private OverlayBase _logicChild;
-        internal OverlayBase LogicChild
+        private OverlayBase? _logicChild;
+        internal OverlayBase? LogicChild
         {
             get => this._logicChild;
             set

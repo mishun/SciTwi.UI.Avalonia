@@ -44,7 +44,7 @@ namespace SciTwi.UI.Controls.Plotting
 
         internal void NotifyReRender(bool ignoreCurrentVisibility = false)
         {
-            for (ILogical node = ignoreCurrentVisibility ? this.GetLogicalParent() : this; !(node is null); node = node.GetLogicalParent())
+            for (ILogical? node = ignoreCurrentVisibility ? this.GetLogicalParent() : this; node is not null; node = node.GetLogicalParent())
                 switch (node)
                 {
                     case PlotOverlayHost owner:
@@ -61,20 +61,20 @@ namespace SciTwi.UI.Controls.Plotting
 
     public abstract class OverlayBasePresenting : OverlayBase
     {
-        public static readonly DirectProperty<OverlayBasePresenting, IBrush> FillProperty =
-            AvaloniaProperty.RegisterDirect<OverlayBasePresenting, IBrush>
+        public static readonly DirectProperty<OverlayBasePresenting, IBrush?> FillProperty =
+            AvaloniaProperty.RegisterDirect<OverlayBasePresenting, IBrush?>
                 (nameof(Fill), o => o.Fill, (o, v) => o.Fill = v);
 
-        public static readonly DirectProperty<OverlayBasePresenting, IPen> StrokeProperty =
-            AvaloniaProperty.RegisterDirect<OverlayBasePresenting, IPen>
+        public static readonly DirectProperty<OverlayBasePresenting, IPen?> StrokeProperty =
+            AvaloniaProperty.RegisterDirect<OverlayBasePresenting, IPen?>
                 (nameof(Stroke), o => o.Stroke, (o, v) => o.Stroke = v);
 
 
-        private IBrush fill;
-        private IPen stroke;
+        private IBrush? fill;
+        private IPen? stroke;
 
 
-        public IBrush Fill
+        public IBrush? Fill
         {
             get => this.fill;
             set
@@ -84,7 +84,7 @@ namespace SciTwi.UI.Controls.Plotting
             }
         }
 
-        public IPen Stroke
+        public IPen? Stroke
         {
             get => this.stroke;
             set
@@ -106,14 +106,14 @@ namespace SciTwi.UI.Controls.Plotting
 
     public abstract class OverlayBaseSeries : OverlayBasePresenting
     {
-        public static readonly DirectProperty<OverlayBaseSeries, Point[]> PointsProperty =
-            AvaloniaProperty.RegisterDirect<OverlayBaseSeries, Point[]>
+        public static readonly DirectProperty<OverlayBaseSeries, Point[]?> PointsProperty =
+            AvaloniaProperty.RegisterDirect<OverlayBaseSeries, Point[]?>
                 (nameof(Points), o => o.Points, (o, v) => o.Points = v);
 
 
-        private Point[] points;
+        private Point[]? points;
 
-        public Point[] Points
+        public Point[]? Points
         {
             get => this.points;
             set

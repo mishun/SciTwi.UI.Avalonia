@@ -17,19 +17,20 @@ type ScaleGridDims = {
 
 
 type CanvasTransform (scale0) =
-    inherit MatrixTransform ()
-
     let invalidate = Event<_, _> ()
     let minScale = 1e-3
     let maxScale = 1e4
     let mutable scale = scale0
     let mutable center = Point (0.0, 0.0)
 
+    interface ITransform with
+        member this.Value = this.Matrix
 
-    interface IAffectsRender with
+    interface IMutableTransform with
         [<CLIEvent>]
-        member __.Invalidated = invalidate.Publish
+        member __.Changed = invalidate.Publish
 
+    member val Matrix = Matrix.Identity with get, set
 
     member __.GetMatrix (bounds : Rect) =
         Matrix (
@@ -39,8 +40,8 @@ type CanvasTransform (scale0) =
 
     member this.UpdateMatrix (bounds : Rect) =
         let newMatrix = this.GetMatrix bounds
-        if newMatrix <> base.Matrix then
-            base.Matrix <- newMatrix
+        if newMatrix <> this.Matrix then
+            this.Matrix <- newMatrix
             invalidate.Trigger (this, EventArgs.Empty)
 
     member t.Drag (delta : Point, bounds : Rect) =
