@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Reactive;
 using System.Reactive.Disposables;
 using System.Runtime.CompilerServices;
@@ -6,50 +7,65 @@ using ReactiveUI;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Platform.Storage;
+using Avalonia.Input.Platform;
 
 namespace SciTwi.UI;
 
 
 public static class DialogUtil
 {
-    static DialogUtil()
+    private static readonly ConditionalWeakTable<Visual, ConcurrentDictionary<string, SerialDisposable>> disposablesCache = [];
+
+    private static void HandleInteractionPropertyWith<Arg, Res>(AttachedProperty< Interaction<Arg, Res?> > property, Func<Visual, Arg, Task<Res?>> handler)
     {
-        OpenFileInteractionProperty.Changed.Subscribe(OpenFileInteractionChanged);
-        SaveFileInteractionProperty.Changed.Subscribe(SaveFileInteractionChanged);
-        ClipboardTextInteractionProperty.Changed.Subscribe(ClipboardTextInteraction);
+        property.Changed.Subscribe(args => {
+            if (args.Sender is Visual owner)
+            {
+                var handlerDisposable = disposablesCache.GetOrCreateValue(owner).GetOrAdd(property.Name, _ => new SerialDisposable());
+                handlerDisposable.Disposable =
+                    args.NewValue.GetValueOrDefault()?.RegisterHandler(async ctx => {
+                        Res? result = default;
+                        try
+                        {
+                            result = await handler(owner, ctx.Input);
+                        }
+                        catch(Exception)
+                        {
+                        }
+                        finally
+                        {
+                            ctx.SetOutput(result);
+                        }
+                    });
+            }
+        });
     }
 
 
-    public static readonly AttachedProperty< Interaction<FilePickerOpenOptions, IStorageFile?> > OpenFileInteractionProperty =
-        AvaloniaProperty.RegisterAttached<Visual, Interaction<FilePickerOpenOptions, IStorageFile?>>("OpenFileInteraction", typeof(DialogUtil));
+    static DialogUtil()
+    {
+        HandleInteractionPropertyWith(OpenFileInteractionProperty, HandleOpenFileInteraction);
+        HandleInteractionPropertyWith(SaveFileInteractionProperty, HandleSaveFileInteraction);
+        HandleInteractionPropertyWith(ClipboardSetTextInteractionProperty, HandleSetClipboardTextInteraction);
+        HandleInteractionPropertyWith(LaunchStorageItemInteractionProperty, HandleLaunchStorageItemInteraction);
+        HandleInteractionPropertyWith(LaunchFileInfoInteractionProperty, HandleLaunchFileInfoInteraction);
+    }
 
-    public static Interaction<FilePickerOpenOptions, IStorageFile?> GetOpenFileInteraction(Visual element) =>
+
+    public static readonly AttachedProperty< Interaction<FilePickerOpenOptions, IReadOnlyList<IStorageFile>?> > OpenFileInteractionProperty =
+        AvaloniaProperty.RegisterAttached<Visual, Interaction<FilePickerOpenOptions, IReadOnlyList<IStorageFile>?>>("OpenFileInteraction", typeof(DialogUtil));
+
+    public static Interaction<FilePickerOpenOptions, IReadOnlyList<IStorageFile>?> GetOpenFileInteraction(Visual element) =>
         element.GetValue(OpenFileInteractionProperty);
 
-    public static void SetOpenFileInteraction(Visual element, Interaction<FilePickerOpenOptions, IStorageFile?> value) =>
+    public static void SetOpenFileInteraction(Visual element, Interaction<FilePickerOpenOptions, IReadOnlyList<IStorageFile>?> value) =>
         element.SetValue(OpenFileInteractionProperty, value);
 
-    private static readonly ConditionalWeakTable<Visual, SerialDisposable> openFilePickerHandlerCache = [];
-    private static void OpenFileInteractionChanged(AvaloniaPropertyChangedEventArgs< Interaction<FilePickerOpenOptions, IStorageFile?> > args)
+    private static async Task<IReadOnlyList<IStorageFile>?> HandleOpenFileInteraction(Visual owner, FilePickerOpenOptions options)
     {
-        if (args.Sender is Visual owner)
-        {
-            var interaction = args.NewValue.GetValueOrDefault();
-            var handler = openFilePickerHandlerCache.GetOrCreateValue(owner);
-            handler.Disposable =
-                interaction?.RegisterHandler(async ctx => {
-                    IStorageFile? storageFile = null;
-                    try
-                    {
-                        if (TopLevel.GetTopLevel(owner) is TopLevel topLevel && topLevel.StorageProvider.CanOpen)
-                            storageFile = await topLevel.StorageProvider.OpenFilePickerAsync(ctx.Input);
-                    }
-                    finally
-                    {
-                        ctx.SetOutput(storageFile);
-                    }
-                });
-        }
+        if (TopLevel.GetTopLevel(owner) is TopLevel topLevel && topLevel.StorageProvider.CanOpen)
+            return await topLevel.StorageProvider.OpenFilePickerAsync(options);
+        return null;
     }
 
 
@@ -62,52 +78,48 @@ public static class DialogUtil
     public static void SetSaveFileInteraction(Visual element, Interaction<FilePickerSaveOptions, IStorageFile?> value) =>
         element.SetValue(SaveFileInteractionProperty, value);
 
-    private static readonly ConditionalWeakTable<Visual, SerialDisposable> saveFilePickerHandlerCache = [];
-    private static void SaveFileInteractionChanged(AvaloniaPropertyChangedEventArgs< Interaction<FilePickerSaveOptions, IStorageFile?> > args)
+    private static async Task<IStorageFile?> HandleSaveFileInteraction(Visual owner, FilePickerSaveOptions options)
     {
-        if (args.Sender is Visual owner)
-        {
-            var interaction = args.NewValue.GetValueOrDefault();
-            var handler = saveFilePickerHandlerCache.GetOrCreateValue(owner);
-            handler.Disposable =
-                interaction?.RegisterHandler(async ctx => {
-                    IStorageFile? storageFile = null;
-                    try
-                    {
-                        if (TopLevel.GetTopLevel(owner) is TopLevel topLevel && topLevel.StorageProvider.CanSave)
-                            storageFile = await topLevel.StorageProvider.SaveFilePickerAsync(ctx.Input);
-                    }
-                    finally
-                    {
-                        ctx.SetOutput(storageFile);
-                    }
-                });
-        }
+        if (TopLevel.GetTopLevel(owner) is TopLevel topLevel && topLevel.StorageProvider.CanSave)
+            return await topLevel.StorageProvider.SaveFilePickerAsync(options);
+        return null;
     }
 
 
-    public static readonly AttachedProperty< Interaction<string, Unit> > ClipboardTextInteractionProperty =
-        AvaloniaProperty.RegisterAttached<Visual, Interaction<string, Unit>>("ClipboardTextInteraction", typeof(DialogUtil));
+    public static readonly AttachedProperty< Interaction<string, Unit> > ClipboardSetTextInteractionProperty =
+        AvaloniaProperty.RegisterAttached<Visual, Interaction<string, Unit>>("ClipboardSetTextInteraction", typeof(DialogUtil));
 
-    public static Interaction<string, Unit> GetClipboardTextInteraction(Visual element) =>
-        element.GetValue(ClipboardTextInteractionProperty);
+    public static Interaction<string, Unit> GetClipboardSetTextInteraction(Visual element) =>
+        element.GetValue(ClipboardSetTextInteractionProperty);
 
-    public static void SetClipboardTextInteraction(Visual element, Interaction<string, Unit> value) =>
-        element.SetValue(ClipboardTextInteractionProperty, value);
+    public static void SetClipboardSetTextInteraction(Visual element, Interaction<string, Unit> value) =>
+        element.SetValue(ClipboardSetTextInteractionProperty, value);
 
-    private static readonly ConditionalWeakTable<Visual, SerialDisposable> clipboardTextHandlerCache = [];
-    private static void ClipboardTextInteraction(AvaloniaPropertyChangedEventArgs< Interaction<string, Unit> > args)
+    private static async Task<Unit> HandleSetClipboardTextInteraction(Visual owner, string text)
     {
-        if (args.Sender is Visual owner)
-        {
-            var interaction = args.NewValue.GetValueOrDefault();
-            var handler = clipboardTextHandlerCache.GetOrCreateValue(owner);
-            handler.Disposable =
-                interaction?.RegisterHandler(async ctx => {
-                    if (TopLevel.GetTopLevel(owner) is TopLevel topLevel)
-                        await topLevel.Clipboard.SetTextAsync(ctx.Input);
-                    ctx.SetOutput(Unit.Default);
-                });
-        }
+        if (TopLevel.GetTopLevel(owner) is TopLevel topLevel && topLevel.Clipboard is IClipboard clipboard)
+            await clipboard.SetTextAsync(text);
+        return Unit.Default;
+    }
+
+
+    public static readonly AttachedProperty< Interaction<IStorageItem, bool> > LaunchStorageItemInteractionProperty =
+        AvaloniaProperty.RegisterAttached<Visual, Interaction<IStorageItem, bool>>("LaunchStorageItemInteraction", typeof(DialogUtil));
+
+    private static async Task<bool> HandleLaunchStorageItemInteraction(Visual owner, IStorageItem storageItem)
+    {
+        if (TopLevel.GetTopLevel(owner) is TopLevel topLevel)
+            return await topLevel.Launcher.LaunchFileAsync(storageItem);
+        return false;
+    }
+
+    public static readonly AttachedProperty< Interaction<FileInfo, bool> > LaunchFileInfoInteractionProperty =
+        AvaloniaProperty.RegisterAttached<Visual, Interaction<FileInfo, bool>>("LaunchFileInfoInteraction", typeof(DialogUtil));
+
+    private static async Task<bool> HandleLaunchFileInfoInteraction(Visual owner, FileInfo fileInfo)
+    {
+        if (TopLevel.GetTopLevel(owner) is TopLevel topLevel)
+            return await topLevel.Launcher.LaunchFileInfoAsync(fileInfo);
+        return false;
     }
 }

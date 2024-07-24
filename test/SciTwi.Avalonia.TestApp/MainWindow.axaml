@@ -6,9 +6,15 @@
         
         xmlns:plot="clr-namespace:SciTwi.UI.Controls.Plotting;assembly=SciTwi.UI.Avalonia">
 
-    <plot:PlotOverlayHost>
-      <plot:OverlayGroup>
-        <plot:OverlaySeries Fill="Red" Points="{Binding Points}" />
-      </plot:OverlayGroup>
-    </plot:PlotOverlayHost>
+  <plot:PlotOverlayHost>
+    <plot:OverlayGroup>
+      <plot:OverlayLayeredGeometry Fill="LightBlue" Geometry="{Binding LayeredGeometries}">
+        <plot:OverlayLayeredGeometry.Stroke>
+          <Pen Brush="Green" Thickness="2" LineCap="Round" LineJoin="Round" />
+        </plot:OverlayLayeredGeometry.Stroke>
+      </plot:OverlayLayeredGeometry>
+
+      <plot:OverlaySeries Fill="Red" Points="{Binding Points}" />
+    </plot:OverlayGroup>
+  </plot:PlotOverlayHost>
 </Window>

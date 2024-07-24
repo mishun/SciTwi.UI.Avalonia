@@ -3,10 +3,18 @@ using System.Collections.Generic;
 using Avalonia;
 using Avalonia.Media;
 using Avalonia.Metadata;
-using SciTwi.UI.Rendering;
+
+namespace System.Runtime.CompilerServices
+{
+    internal static class IsExternalInit {}
+}
 
 namespace SciTwi.UI.Controls.Plotting
 {
+    public abstract record LayeredGeometry;
+    public record LayeredGeometryLine(double A, double B, double C) : LayeredGeometry;
+    public record LayeredGeometryEllipse(Matrix Matrix) : LayeredGeometry;
+
     public sealed class OverlayLayeredGeometry : OverlayBasePresenting
     {
         public static readonly DirectProperty<OverlayLayeredGeometry, IEnumerable<LayeredGeometry>?> GeometryProperty =
@@ -35,10 +43,50 @@ namespace SciTwi.UI.Controls.Plotting
 
             foreach (var g in geometry)
             {
-                if (g is null)
-                    continue;
+                RenderGeometry(context, bounds, matrix, this.Fill, this.Stroke, g);
+            }
+        }
 
-                Rendering.Plotting.Geometry.render(context, bounds, matrix, this.Fill, this.Stroke, g);
+        private static void RenderGeometry(DrawingContext context, Rect bounds, Matrix transform, IBrush? fill, IPen? stroke, LayeredGeometry geometry)
+        {
+            switch(geometry)
+            {
+                case LayeredGeometryLine line:
+                    if(stroke is not null)
+                    {
+                        var dx = line.A / Math.Sqrt(line.A * line.A + line.B * line.B);
+                        var dy = line.B / Math.Sqrt(line.A * line.A + line.B * line.B);
+                        var dc = -line.C / Math.Sqrt(line.A * line.A + line.B * line.B);
+
+                        var p0 = new Point(dc * dx - dy, dc * dy + dx).Transform(transform);
+                        var p1 = new Point(dc * dx + dy, dc * dy - dx).Transform(transform);
+                        var delta = p1 - p0;
+
+                        if(Math.Abs(delta.X) > Math.Abs(delta.Y))
+                        {
+                            var l0 = p0 + delta * ((bounds.X - p0.X) / delta.X);
+                            var l1 = p0 + delta * ((bounds.Right - p0.X) / delta.X);
+                            context.DrawLine(stroke, l0, l1);
+                        }
+                        else
+                        {
+                            var l0 = p0 + delta * ((bounds.Y - p0.Y) / delta.Y);
+                            var l1 = p0 + delta * ((bounds.Bottom - p0.Y) / delta.Y);
+                            context.DrawLine(stroke, l0, l1);
+                        }
+                    }
+                    break;
+
+                case LayeredGeometryEllipse ellipse:
+                    {
+                        using var tmp = context.PushTransform(ellipse.Matrix * transform);
+                        var pen = new Pen(fill, 2.0);
+                        context.DrawRectangle(pen, new Rect (-1.0, -1.0, 2.0, 2.0), cornerRadius: 1.0f);
+                    }
+                    break;
+
+                default:
+                    break;
             }
         }
     }
