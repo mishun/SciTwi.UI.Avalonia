@@ -15,7 +15,7 @@
     <RepositoryUrl>https://github.com/mishun/SciTwi.UI.Avalonia</RepositoryUrl>
     <Description>Misc Avalonia UI utils</Description>
     <VersionPrefix>0.0.0</VersionPrefix>
-    <VersionSuffix>preview4</VersionSuffix>
+    <VersionSuffix>preview5</VersionSuffix>
   </PropertyGroup>
 
   <ItemGroup>

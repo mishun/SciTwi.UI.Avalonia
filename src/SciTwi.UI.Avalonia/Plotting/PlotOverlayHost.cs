@@ -25,7 +25,6 @@ internal class PanState
         if(this.mouseTrack is null)
         {
             this.mouseTrack = origin;
-            // panning.Trigger(true);
             this.Panning?.Invoke(true);
         }
     }
@@ -35,7 +34,6 @@ internal class PanState
         if(this.mouseTrack is Point)
         {
             this.mouseTrack = null;
-            // panning.Trigger(false);
             this.Panning?.Invoke(false);
         }
     }
@@ -111,7 +109,6 @@ public class PlotOverlayHost : Control
         this.Background = Brushes.Transparent;
         this.CanvasTransform = new CanvasTransform(1.0);
 
-        // this.panState.Panning.Subscribe(panning => this.Cursor = panning ? this.panningCursor : null);
         this.panState.Panning += panning => { this.Cursor = panning ? this.panningCursor : null; };
     }
 

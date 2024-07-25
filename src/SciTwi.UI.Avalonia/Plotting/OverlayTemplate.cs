@@ -1,61 +1,60 @@
 ﻿using System;
 using Avalonia.Collections;
-using Avalonia.Controls.Templates;
+using Avalonia.Markup.Xaml.Templates;
 using Avalonia.Metadata;
 
-namespace SciTwi.UI.Controls.Plotting
+
+namespace SciTwi.UI.Controls.Plotting;
+
+public interface IOverlayTemplate
 {
-    public interface IOverlayTemplate
+    public bool Match(object data);
+    public OverlayBase? Build(object data);
+    public OverlayBase? Build(object data, OverlayBase? existing);
+}
+
+public class OverlayTemplate : IOverlayTemplate
+{
+    [Content]
+    [TemplateContent(TemplateResultType = typeof(OverlayBase))]
+    public object? Content { get; set; }
+
+    [DataType]
+    public Type? DataType { get; set; }
+
+    public bool Match(object data)
     {
-        public abstract bool Match(object data);
-        public abstract OverlayBase? Build(object data);
+        if (this.DataType is Type targetType)
+            return targetType.IsInstanceOfType(data);
+        return true;
     }
 
-    public class OverlayTemplate : IOverlayTemplate
+    public OverlayBase? Build(object data) => this.Build(data, null);
+
+    public OverlayBase? Build(object data, OverlayBase? existing)
     {
-        [Content]
-        [TemplateContent(TemplateResultType = typeof(OverlayBase))]
-        public object? Content { get; set; }
+        return existing ?? TemplateContent.Load<OverlayBase?>(this.Content)?.Result;
+    }
+}
 
-        public Type? DataType { get; set; }
-
-        public bool Match(object data)
-        {
-            if (this.DataType is Type targetType)
-                return targetType.IsInstanceOfType(data);
-            return true;
-        }
-
-        public OverlayBase? Build(object data)
-        {
-            switch (this.Content)
-            {
-                case Func<IServiceProvider?, object> direct:
-                    var instatiated = direct(null);
-                    return (instatiated as TemplateResult<OverlayBase>)?.Result;
-
-                default:
-                    return null;
-            }
-        }
+public class OverlayTemplates : AvaloniaList<IOverlayTemplate>, IOverlayTemplate
+{
+    public bool Match(object data)
+    {
+        foreach (var template in this)
+            if (template?.Match(data) == true)
+                return true;
+        return false;
     }
 
-    public class OverlayTemplates : AvaloniaList<IOverlayTemplate>, IOverlayTemplate
+    public OverlayBase? Build(object data)
     {
-        public bool Match(object data)
-        {
-            foreach (var template in this)
-                if (template?.Match(data) == true)
-                    return true;
-            return false;
-        }
-
-        public OverlayBase? Build(object data)
-        {
-            foreach (var template in this)
-                if (template?.Match(data) == true)
-                    return template.Build(data);
-            return null;
-        }
+        foreach (var template in this)
+            if (template?.Match(data) == true)
+                return template.Build(data);
+        return null;
     }
+
+    public OverlayBase? Build(object data, OverlayBase? existing) =>
+        existing ?? this.Build(data);
 }
