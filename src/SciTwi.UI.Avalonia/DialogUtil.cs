@@ -106,6 +106,12 @@ public static class DialogUtil
     public static readonly AttachedProperty< Interaction<IStorageItem, bool> > LaunchStorageItemInteractionProperty =
         AvaloniaProperty.RegisterAttached<Visual, Interaction<IStorageItem, bool>>("LaunchStorageItemInteraction", typeof(DialogUtil));
 
+    public static Interaction<IStorageItem, bool> GetLaunchStorageItemInteraction(Visual element) =>
+        element.GetValue(LaunchStorageItemInteractionProperty);
+
+    public static void SetLaunchStorageItemInteraction(Visual element, Interaction<IStorageItem, bool> value) =>
+        element.SetValue(LaunchStorageItemInteractionProperty, value);
+
     private static async Task<bool> HandleLaunchStorageItemInteraction(Visual owner, IStorageItem storageItem)
     {
         if (TopLevel.GetTopLevel(owner) is TopLevel topLevel)
@@ -113,8 +119,15 @@ public static class DialogUtil
         return false;
     }
 
+
     public static readonly AttachedProperty< Interaction<FileInfo, bool> > LaunchFileInfoInteractionProperty =
         AvaloniaProperty.RegisterAttached<Visual, Interaction<FileInfo, bool>>("LaunchFileInfoInteraction", typeof(DialogUtil));
+
+    public static Interaction<FileInfo, bool> GetLaunchFileInfoInteraction(Visual element) =>
+        element.GetValue(LaunchFileInfoInteractionProperty);
+
+    public static void SetLaunchFileInfoInteraction(Visual element, Interaction<FileInfo, bool> value) =>
+        element.SetValue(LaunchFileInfoInteractionProperty, value);
 
     private static async Task<bool> HandleLaunchFileInfoInteraction(Visual owner, FileInfo fileInfo)
     {
