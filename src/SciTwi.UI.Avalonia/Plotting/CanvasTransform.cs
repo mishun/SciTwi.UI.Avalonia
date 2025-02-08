@@ -1,20 +1,10 @@
 using System;
 using Avalonia;
 using Avalonia.Media;
-using SciTwi.UI.Rendering;
-
 
 namespace SciTwi.UI.Controls.Plotting;
 
-
-// internal record struct ScaleGridDims(
-//     double WidthInSteps,
-//     double HeightInSteps,
-//     double CoarseStepX,
-//     Point PixelStep,
-//     Point PixelBase,
-//     int Subdivision
-// );
+public readonly record struct ScaleGridDims(double WidthInSteps, double HeightInSteps, double CoarseStepX, Point PixelStep, Point PixelBase, int Subdivision);
 
 public class CanvasTransform : ITransform, IMutableTransform
 {

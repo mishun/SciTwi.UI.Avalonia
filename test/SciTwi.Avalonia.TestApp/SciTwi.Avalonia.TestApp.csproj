@@ -7,11 +7,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Avalonia" Version="11.1.0" />
-    <PackageReference Include="Avalonia.Desktop" Version="11.1.0" />
-    <PackageReference Include="Avalonia.ReactiveUI" Version="11.1.0" />
-    <PackageReference Include="Avalonia.Themes.Simple" Version="11.1.0" />
-    <PackageReference Include="ReactiveUI" Version="18.3.1" />
+    <PackageReference Include="Avalonia" Version="11.1.5" />
+    <PackageReference Include="Avalonia.Desktop" Version="11.1.5" />
+    <PackageReference Include="Avalonia.ReactiveUI" Version="11.1.5" />
+    <PackageReference Include="Avalonia.Themes.Simple" Version="11.1.5" />
+    <PackageReference Include="ReactiveUI" Version="18.4.44" />
   </ItemGroup>
 
   <ItemGroup>

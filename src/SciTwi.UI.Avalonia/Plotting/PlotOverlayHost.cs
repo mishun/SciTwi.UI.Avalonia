@@ -163,9 +163,9 @@ public class PlotOverlayHost : Control
         {
             var matrix = canvasTransform.Matrix;
             var dims = canvasTransform.GridStep(Math.Max(10.0, this.TargetGridSpacing), bounds);
-            Rendering.Plotting.ScaleGrid.renderScaleGrid(context, dims, matrix, this.gridPens);
+            Rendering.Plotting.ScaleGrid.renderScaleGrid(context, ref dims, matrix, this.gridPens);
             this.Root?.RenderPass(context, bounds, matrix);
-            Rendering.Plotting.ScaleGrid.renderScaleRuler(context, dims, this.rulerPens, typeface);
+            Rendering.Plotting.ScaleGrid.renderScaleRuler(context, ref dims, this.rulerPens, typeface);
 
             if (this.mouseTrackRuler is (var a, var b))
             {
