@@ -6,7 +6,6 @@ using Avalonia.Input;
 using Avalonia.LogicalTree;
 using Avalonia.Media;
 using Avalonia.Metadata;
-using SciTwi.UI.Rendering;
 
 
 namespace SciTwi.UI.Controls.Plotting;

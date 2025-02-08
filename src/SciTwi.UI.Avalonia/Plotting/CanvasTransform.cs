@@ -11,7 +11,7 @@ public class CanvasTransform : ITransform, IMutableTransform
     private readonly double minScale = 1e-3;
     private readonly double maxScale = 1e4;
     private double scale;
-    private Point center = new Point(0.0, 0.0);
+    private Point center = new(0.0, 0.0);
 
     public CanvasTransform(double scale0)
     {
