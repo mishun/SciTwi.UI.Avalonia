@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Specialized;
 using Avalonia;
 using Avalonia.Collections;
+using Avalonia.LogicalTree;
 using Avalonia.Media;
 using Avalonia.Metadata;
 
@@ -18,34 +20,42 @@ public class OverlayGroup : OverlayBase
     public AvaloniaList<OverlayBase> Layers { get; } =
         new AvaloniaList<OverlayBase>();
 
-    private void LayersChanged(object sender, NotifyCollectionChangedEventArgs e)
+    private void LayersChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
         switch (e.Action)
         {
             case NotifyCollectionChangedAction.Add:
                 {
-                    var newItems = e.NewItems.OfType<OverlayBase>().ToList();
-                    LogicalChildren.InsertRange(e.NewStartingIndex, newItems);
+                    if(e.NewItems is IList newItems)
+                        LogicalChildren.InsertRange(e.NewStartingIndex, newItems.OfType<OverlayBase>().ToList());
                 }
                 break;
 
             case NotifyCollectionChangedAction.Move:
-                LogicalChildren.MoveRange(e.OldStartingIndex, e.OldItems.Count, e.NewStartingIndex);
+                {
+                    if(e.OldItems is IList old)
+                        LogicalChildren.MoveRange(e.OldStartingIndex, old.Count, e.NewStartingIndex);
+                }
                 break;
 
             case NotifyCollectionChangedAction.Remove:
                 {
-                    var deletedItems = e.OldItems.OfType<OverlayBase>().ToList();
-                    LogicalChildren.RemoveAll(deletedItems);
+                    if(e.OldItems is IList old)
+                    {
+                        var deletedItems = old.OfType<OverlayBase>().ToList();
+                        LogicalChildren.RemoveAll(deletedItems);
+                    }
                 }
                 break;
 
             case NotifyCollectionChangedAction.Replace:
-                for (var i = 0; i < e.OldItems.Count; ++i)
                 {
-                    var index = i + e.OldStartingIndex;
-                    var item = (OverlayBase)e.NewItems[i];
-                    LogicalChildren[index] = item;
+                    if(e.OldItems is IList oldItems && e.NewItems is IList newItems && oldItems.Count == newItems.Count)
+                    {
+                        for(int i = 0; i < newItems.Count; i++)
+                            if(e.NewItems[i] is ILogical element)
+                                LogicalChildren[i + e.OldStartingIndex] = element;
+                    }
                 }
                 break;
 

@@ -6,7 +6,7 @@
         
         xmlns:plot="clr-namespace:SciTwi.UI.Controls.Plotting;assembly=SciTwi.UI.Avalonia">
 
-  <plot:PlotOverlayHost>
+  <plot:PlotOverlayHost Focusable="True">
     <plot:OverlayGroup>
       <plot:OverlayLayeredGeometry Fill="LightBlue" Geometry="{Binding LayeredGeometries}">
         <plot:OverlayLayeredGeometry.Stroke>

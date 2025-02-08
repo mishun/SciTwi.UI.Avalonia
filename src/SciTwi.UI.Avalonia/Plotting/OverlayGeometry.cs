@@ -8,8 +8,8 @@ namespace SciTwi.UI.Controls.Plotting;
 
 public sealed class OverlayGeometry : OverlayBasePresenting
 {
-    public static readonly StyledProperty<Geometry> GeometryProperty =
-        AvaloniaProperty.Register<OverlayGeometry, Geometry>(nameof(Geometry));
+    public static readonly StyledProperty<Geometry?> GeometryProperty =
+        AvaloniaProperty.Register<OverlayGeometry, Geometry?>(nameof(Geometry));
 
     static OverlayGeometry()
     {
@@ -17,7 +17,7 @@ public sealed class OverlayGeometry : OverlayBasePresenting
     }
 
     [Content]
-    public Geometry Geometry
+    public Geometry? Geometry
     {
         get => GetValue(GeometryProperty);
         set => SetValue(GeometryProperty, value);
@@ -26,7 +26,7 @@ public sealed class OverlayGeometry : OverlayBasePresenting
     internal override void RenderContent(DrawingContext context, Rect bounds, Matrix matrix)
     {
         var geometry = this.Geometry;
-        if (geometry is null)
+        if(geometry is null)
             return;
 
         var save = geometry.Transform;
@@ -39,19 +39,19 @@ public sealed class OverlayGeometry : OverlayBasePresenting
 public sealed class OverlayGeometryGroup : OverlayBasePresenting
 {
     [Content]
-    public AvaloniaList<Geometry> Geometry { get; } = new AvaloniaList<Geometry>();
+    public AvaloniaList<Geometry> Geometry { get; } = [];
 
     internal override void RenderContent(DrawingContext context, Rect bounds, Matrix matrix)
     {
-        if (this.Geometry is null || this.Geometry.Count < 1)
+        if(this.Geometry.Count < 1)
             return;
 
         var transform = new MatrixTransform(matrix);
         var stroke = this.Stroke;
         var fill = this.Fill;
-        foreach (var geometry in this.Geometry)
+        foreach(var geometry in this.Geometry)
         {
-            if (geometry is null)
+            if(geometry is null)
                 continue;
 
             var save = geometry.Transform;

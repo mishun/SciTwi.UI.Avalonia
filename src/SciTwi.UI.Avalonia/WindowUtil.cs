@@ -57,7 +57,7 @@ public static class WindowUtil
     public static void SetHideWindowOnClose(Window element, bool value) =>
         element.SetValue(HideWindowOnCloseProperty, value);
 
-    private static void HideWindowOnCloseHandler(object sender, System.ComponentModel.CancelEventArgs args)
+    private static void HideWindowOnCloseHandler(object? sender, System.ComponentModel.CancelEventArgs args)
     {
         if (sender is Window window)
         {

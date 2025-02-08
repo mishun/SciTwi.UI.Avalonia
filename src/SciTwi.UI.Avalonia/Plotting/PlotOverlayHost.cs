@@ -56,92 +56,65 @@ public class PlotOverlayHost : Control
     public static readonly StyledProperty<IBrush?> BackgroundProperty =
         Border.BackgroundProperty.AddOwner<PlotOverlayHost>();
 
-    public static readonly StyledProperty<CanvasTransform> CanvasTransformProperty =
-        AvaloniaProperty.Register<PlotOverlayHost, CanvasTransform>(nameof(CanvasTransform));
-
-    public static readonly StyledProperty<OverlayBase> RootProperty =
-        AvaloniaProperty.Register<PlotOverlayHost, OverlayBase>(nameof(Root));
-
-    public static readonly StyledProperty<double> TargetGridSpacingProperty =
-        AvaloniaProperty.Register<PlotOverlayHost, double>(nameof(TargetGridSpacing), 400.0);
-
-    public static readonly StyledProperty<bool> ZoomEnabledProperty =
-        AvaloniaProperty.Register<PlotOverlayHost, bool>(nameof(ZoomEnabled), true);
-
-
-    private static readonly Typeface typeface = new(FontFamily.Default); // TODO: something better?
-
-    private readonly Rendering.Plotting.ScaleGrid.GridPens gridPens = Rendering.Plotting.ScaleGrid.makeDefaultGridPens();
-    private readonly Rendering.Plotting.ScaleGrid.RulerPens rulerPens = Rendering.Plotting.ScaleGrid.makeDefaultRulerPens();
-    private readonly Cursor panningCursor = new(StandardCursorType.SizeAll);
-    private readonly PanState panState = new();
-    private (Point, Point)? mouseTrackRuler = null;
-
-
-    static PlotOverlayHost()
-    {
-        AffectsRender<PlotOverlayHost>(BackgroundProperty, CanvasTransformProperty, RootProperty, TargetGridSpacingProperty);
-
-        RootProperty.Changed.AddClassHandler<PlotOverlayHost>((host, args) => {
-            if (args.OldValue is ILogical prev)
-                host.LogicalChildren.Remove(prev);
-            if (args.NewValue is ILogical next)
-                host.LogicalChildren.Add(next);
-        });
-
-        Visual.BoundsProperty.Changed.AddClassHandler<PlotOverlayHost>((host, args) => {
-            if (args.NewValue is Rect bounds)
-                host?.CanvasTransform?.UpdateMatrix(bounds);
-        });
-
-        CanvasTransformProperty.Changed.AddClassHandler<PlotOverlayHost>((host, args) => {
-            if(args.OldValue is IMutableTransform oldTransform)
-                oldTransform.Changed -= host.OnCanvasTransformModified;
-            if(args.NewValue is IMutableTransform newTransform)
-                newTransform.Changed += host.OnCanvasTransformModified;
-        });
-    }
-
-    public PlotOverlayHost()
-    {
-        base.ClipToBounds = true;
-        this.Background = Brushes.Transparent;
-        this.CanvasTransform = new CanvasTransform(1.0);
-
-        this.panState.Panning += panning => { this.Cursor = panning ? this.panningCursor : null; };
-    }
-
-
-    private void OnCanvasTransformModified(object s, EventArgs args)
-    {
-        base.InvalidateVisual();
-    }
-
-
     public IBrush? Background
     {
         get => base.GetValue(BackgroundProperty);
         set => base.SetValue(BackgroundProperty, value);
     }
 
-    public CanvasTransform CanvasTransform
+
+    public static readonly StyledProperty<IBrush?> ScaleRulerBrushProperty =
+        AvaloniaProperty.Register<PlotOverlayHost, IBrush?>(nameof(ScaleRulerBrush));
+
+    public IBrush? ScaleRulerBrush
     {
-        get => base.GetValue(CanvasTransformProperty);
-        set => base.SetValue(CanvasTransformProperty, value);
+        get => base.GetValue(ScaleRulerBrushProperty);
+        set => base.SetValue(ScaleRulerBrushProperty, value);
     }
 
-    public double TargetGridSpacing
+
+    public static readonly StyledProperty<IPen?> ScaleGridFinePenProperty =
+        AvaloniaProperty.Register<PlotOverlayHost, IPen?>(nameof(ScaleGridFinePen));
+
+    public IPen? ScaleGridFinePen
     {
-        get => base.GetValue(TargetGridSpacingProperty);
-        set => base.SetValue(TargetGridSpacingProperty, value);
+        get => base.GetValue(ScaleGridFinePenProperty);
+        set => base.SetValue(ScaleGridFinePenProperty, value);
     }
 
-    public bool ZoomEnabled
+
+    public static readonly StyledProperty<IPen?> ScaleGridCoarsePenProperty =
+        AvaloniaProperty.Register<PlotOverlayHost, IPen?>(nameof(ScaleGridCoarsePen));
+
+    public IPen? ScaleGridCoarsePen
     {
-        get => base.GetValue(ZoomEnabledProperty);
-        set => base.SetValue(ZoomEnabledProperty, value);
+        get => base.GetValue(ScaleGridCoarsePenProperty);
+        set => base.SetValue(ScaleGridCoarsePenProperty, value);
     }
 
+
+    public static readonly StyledProperty<IPen?> ScaleGridZeroPenProperty =
+        AvaloniaProperty.Register<PlotOverlayHost, IPen?>(nameof(ScaleGridZeroPen));
+
+    public IPen? ScaleGridZeroPen
+    {
+        get => base.GetValue(ScaleGridZeroPenProperty);
+        set => base.SetValue(ScaleGridZeroPenProperty, value);
+    }
+
+
+    public static readonly StyledProperty<IPen?> MouseRulerStrokeProperty =
+        AvaloniaProperty.Register<PlotOverlayHost, IPen?>(nameof(MouseRulerStroke));
+
+    public IPen? MouseRulerStroke
+    {
+        get => base.GetValue(MouseRulerStrokeProperty);
+        set => base.SetValue(MouseRulerStrokeProperty, value);
+    }
+
+
+    public static readonly StyledProperty<OverlayBase> RootProperty =
+        AvaloniaProperty.Register<PlotOverlayHost, OverlayBase>(nameof(Root));
 
     [Content]
     public OverlayBase Root
@@ -151,30 +124,108 @@ public class PlotOverlayHost : Control
     }
 
 
+    public static readonly StyledProperty<double> TargetGridSpacingProperty =
+        AvaloniaProperty.Register<PlotOverlayHost, double>(nameof(TargetGridSpacing), 400.0);
+
+    public double TargetGridSpacing
+    {
+        get => base.GetValue(TargetGridSpacingProperty);
+        set => base.SetValue(TargetGridSpacingProperty, value);
+    }
+
+
+    public static readonly StyledProperty<bool> ZoomEnabledProperty =
+        AvaloniaProperty.Register<PlotOverlayHost, bool>(nameof(ZoomEnabled), true);
+
+    public bool ZoomEnabled
+    {
+        get => base.GetValue(ZoomEnabledProperty);
+        set => base.SetValue(ZoomEnabledProperty, value);
+    }
+
+
+    private static readonly Typeface typeface = new(FontFamily.Default); // TODO: something better?
+    private readonly Cursor panningCursor = new(StandardCursorType.SizeAll);
+    private readonly PanState panState = new();
+    private (Point, Point)? mouseTrackRuler = null;
+    private readonly CanvasTransform canvasTransform = new(1.0);
+
+
+    static PlotOverlayHost()
+    {
+        AffectsRender<PlotOverlayHost>(BackgroundProperty, RootProperty, TargetGridSpacingProperty);
+
+        RootProperty.Changed.AddClassHandler<PlotOverlayHost>((host, args) => {
+            if(args.OldValue is ILogical prev)
+                host?.LogicalChildren.Remove(prev);
+            if(args.NewValue is ILogical next)
+                host?.LogicalChildren.Add(next);
+        });
+
+        Visual.BoundsProperty.Changed.AddClassHandler<PlotOverlayHost>((host, args) => {
+            if(args.NewValue is Rect bounds)
+                host?.CanvasTransform.TryUpdateMatrix(bounds);
+        });
+    }
+
+    public PlotOverlayHost()
+    {
+        base.ClipToBounds = true;
+        this.Background = Brushes.Transparent;
+        this.MouseRulerStroke = new Pen(Brushes.Black, 2, DashStyle.Dash);
+        this.ScaleRulerBrush = new SolidColorBrush(Colors.Black);
+        this.ScaleGridFinePen =  new Pen(new SolidColorBrush(Color.FromRgb(230, 230, 230)), 1.0);
+        this.ScaleGridCoarsePen = new Pen(new SolidColorBrush(Color.FromRgb(210, 210, 210)), 1.0);
+        this.ScaleGridZeroPen = new Pen(new SolidColorBrush(Colors.DarkSlateGray), 1.0);
+
+        this.CanvasTransform.MatrixChanged += this.OnCanvasTransformMatrixChanged;
+        this.panState.Panning += this.OnPanningStateChanged;
+    }
+
+
+    private void OnCanvasTransformMatrixChanged(Matrix matrix)
+    {
+        base.InvalidateVisual();
+    }
+
+    private void OnPanningStateChanged(bool panning)
+    {
+        this.Cursor = panning ? this.panningCursor : null;
+    }
+
+
+    public CanvasTransform CanvasTransform => this.canvasTransform;
+
+
     public override void Render(DrawingContext context)
     {
         var bounds = new Rect(0.0, 0.0, this.Bounds.Width, this.Bounds.Height);
-        if (this.Background is IBrush background)
+        if(this.Background is IBrush background)
             context.FillRectangle(background, bounds);
 
-        var canvasTransform = this.CanvasTransform;
-        if (canvasTransform is not null)
         {
-            var matrix = canvasTransform.Matrix;
-            var dims = canvasTransform.GridStep(Math.Max(10.0, this.TargetGridSpacing), bounds);
-            Rendering.Plotting.ScaleGrid.renderScaleGrid(context, ref dims, matrix, this.gridPens);
+            var matrix = this.CanvasTransform.Matrix;
+            var dims = CanvasTransform.GridStep(matrix, Math.Max(10.0, this.TargetGridSpacing), bounds);
+            Rendering.ScaleGrid.renderScaleGrid(context, ref dims, matrix, this.ScaleGridFinePen, this.ScaleGridCoarsePen, this.ScaleGridZeroPen);
             this.Root?.RenderPass(context, bounds, matrix);
-            Rendering.Plotting.ScaleGrid.renderScaleRuler(context, ref dims, this.rulerPens, typeface);
 
-            if (this.mouseTrackRuler is (var a, var b))
             {
-                var pen = new Pen(Brushes.Black, 2, DashStyle.Dash);
-                context.DrawLine(pen, a.Transform(matrix), b.Transform(matrix));
+                if(this.ScaleRulerBrush is IBrush rulerBrush)
+                    Rendering.ScaleGrid.renderScaleRuler(context, ref dims, typeface, rulerBrush);
+            }
 
-                var diff = b - a;
-                var text = $"d = {Math.Sqrt(diff.X * diff.X + diff.Y * diff.Y):N2}\nΔx = {diff.X:N2}\nΔy = {diff.Y:N2}";
-                var ft = new FormattedText(text, CultureInfo.CurrentUICulture, FlowDirection.LeftToRight, typeface, 12.0, Brushes.Black);
-                context.DrawText(ft, new Point(10, 35));
+            if(this.mouseTrackRuler is (var a, var b))
+            {
+                if(this.MouseRulerStroke is IPen pen)
+                    context.DrawLine(pen, a.Transform(matrix), b.Transform(matrix));
+
+                if(this.ScaleRulerBrush is IBrush rulerBrush)
+                {
+                    var diff = b - a;
+                    var text = $"d = {double.Hypot(diff.X, diff.Y):N2}\nΔx = {diff.X:N2}\nΔy = {diff.Y:N2}";
+                    var ft = new FormattedText(text, CultureInfo.CurrentUICulture, FlowDirection.LeftToRight, typeface, 12.0, rulerBrush);
+                    context.DrawText(ft, new Point(10, 35));
+                }
             }
         }
 
@@ -190,7 +241,7 @@ public class PlotOverlayHost : Control
 
     void StartRuler(Point initial)
     {
-        if (!this.mouseTrackRuler.HasValue)
+        if(this.mouseTrackRuler is null)
         {
             var p = initial.Transform(this.CanvasTransform.Matrix.Invert());
             this.mouseTrackRuler = (p, p);
@@ -200,7 +251,7 @@ public class PlotOverlayHost : Control
 
     void TryMoveRuler(Point pos)
     {
-        switch (this.mouseTrackRuler)
+        switch(this.mouseTrackRuler)
         {
             case (var begin, _):
                 var end = pos.Transform(this.CanvasTransform.Matrix.Invert());
@@ -212,7 +263,7 @@ public class PlotOverlayHost : Control
 
     void StopRuler()
     {
-        if (this.mouseTrackRuler.HasValue)
+        if(this.mouseTrackRuler.HasValue)
         {
             this.mouseTrackRuler = null;
             this.InvalidateVisual();
@@ -224,7 +275,7 @@ public class PlotOverlayHost : Control
     {
         this.Focus();
         var p = e.GetCurrentPoint(this);
-        switch (p.Properties.PointerUpdateKind)
+        switch(p.Properties.PointerUpdateKind)
         {
             case PointerUpdateKind.LeftButtonPressed:
                 this.panState.Start(p.Position);
@@ -241,7 +292,7 @@ public class PlotOverlayHost : Control
 
     protected override void OnPointerReleased(PointerReleasedEventArgs e)
     {
-        switch (e.InitialPressMouseButton)
+        switch(e.InitialPressMouseButton)
         {
             case MouseButton.Left:
                 this.panState.Stop();
@@ -256,10 +307,10 @@ public class PlotOverlayHost : Control
 
     protected override void OnPointerMoved(PointerEventArgs e)
     {
-        if (object.ReferenceEquals(e.Pointer.Captured, this))
+        if(object.ReferenceEquals(e.Pointer.Captured, this))
         {
             var p = e.GetCurrentPoint(this);
-            switch (p.Properties.PointerUpdateKind)
+            switch(p.Properties.PointerUpdateKind)
             {
                 case PointerUpdateKind.LeftButtonPressed:
                     this.panState.Start(p.Position);
@@ -295,10 +346,10 @@ public class PlotOverlayHost : Control
     protected override void OnPointerWheelChanged(PointerWheelEventArgs e)
     {
         base.OnPointerWheelChanged(e);
-        if (this.ZoomEnabled)
+        if(this.ZoomEnabled)
         {
             var zoom = Math.Pow(1.2, 0.5 * e.Delta.Y);
-            this.CanvasTransform?.ZoomAt(e.GetPosition(this), zoom, this.Bounds);
+            this.CanvasTransform.ZoomAt(e.GetPosition(this), zoom, this.Bounds);
             e.Handled = true;
         }
     }
@@ -307,16 +358,16 @@ public class PlotOverlayHost : Control
     private bool TryConsumeKey(Key key)
     {
         var bounds = this.Bounds;
-        switch (key)
+        switch(key)
         {
-            case Key.PageUp: this.CanvasTransform?.Drag(new Point(0.0, 0.8 * bounds.Height), bounds); break;
-            case Key.Up: this.CanvasTransform?.Drag(new Point(0.0, 0.2 * bounds.Height), bounds); break;
-            case Key.PageDown: this.CanvasTransform?.Drag(new Point(0.0, -0.8 * bounds.Height), bounds); break;
-            case Key.Down: this.CanvasTransform?.Drag(new Point(0.0, -0.2 * bounds.Height), bounds); break;
-            case Key.Left: this.CanvasTransform?.Drag(new Point(0.2 * bounds.Width, 0.0), bounds); break;
-            case Key.Right: this.CanvasTransform?.Drag(new Point(-0.2 * bounds.Width, 0.0), bounds); break;
-            case Key.OemMinus: this.CanvasTransform?.ZoomAt(bounds.Center, 0.8, bounds); break;
-            case Key.OemPlus: this.CanvasTransform?.ZoomAt(bounds.Center, 1.25, bounds); break;
+            case Key.PageUp: this.CanvasTransform.Drag(new Point(0.0, 0.8 * bounds.Height), bounds); break;
+            case Key.Up: this.CanvasTransform.Drag(new Point(0.0, 0.2 * bounds.Height), bounds); break;
+            case Key.PageDown: this.CanvasTransform.Drag(new Point(0.0, -0.8 * bounds.Height), bounds); break;
+            case Key.Down: this.CanvasTransform.Drag(new Point(0.0, -0.2 * bounds.Height), bounds); break;
+            case Key.Left: this.CanvasTransform.Drag(new Point(0.2 * bounds.Width, 0.0), bounds); break;
+            case Key.Right: this.CanvasTransform.Drag(new Point(-0.2 * bounds.Width, 0.0), bounds); break;
+            case Key.OemMinus: this.CanvasTransform.ZoomAt(bounds.Center, 0.8, bounds); break;
+            case Key.OemPlus: this.CanvasTransform.ZoomAt(bounds.Center, 1.25, bounds); break;
 
             default:
                 return false;

@@ -27,7 +27,7 @@ internal class SeriesDrawOp : IDisposable, IEquatable<ICustomDrawOperation>, ICu
     {
     }
 
-    bool IEquatable<ICustomDrawOperation>.Equals(ICustomDrawOperation that) =>
+    bool IEquatable<ICustomDrawOperation>.Equals(ICustomDrawOperation? that) =>
         object.ReferenceEquals(this, that);
 
     Rect ICustomDrawOperation.Bounds => this.bounds;

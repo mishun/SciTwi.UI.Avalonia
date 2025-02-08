@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using Avalonia;
@@ -9,7 +10,7 @@ using ReactiveUI;
 
 namespace SciTwi.UI.Controls.Plotting
 {
-    public class OverlayDictionary<K, V> : OverlayBase
+    public class OverlayDictionary<K, V> : OverlayBase where K : notnull
     {
         public class ElementContext : ReactiveObject
         {
@@ -135,26 +136,31 @@ namespace SciTwi.UI.Controls.Plotting
                     kv.Value.Context.Parent = this.DataContext;
         }
 
-        private void TemplatesChanged(object sender, NotifyCollectionChangedEventArgs e)
+        private void TemplatesChanged(object? sender, NotifyCollectionChangedEventArgs e)
         {
             this.RegenerateLayers(this.dictionary);
             this.NotifyReRender();
         }
 
-        private void DictionaryChanged(object sender, NotifyCollectionChangedEventArgs e)
+        private void DictionaryChanged(object? sender, NotifyCollectionChangedEventArgs e)
         {
             switch (e.Action)
             {
                 case NotifyCollectionChangedAction.Add:
-                    foreach (KeyValuePair<K, V> kv in e.NewItems)
                     {
-                        var context = this.MakeElementContext(kv.Key, kv.Value);
-                        var overlay = kv.Value is null ? null : this.OverlayTemplates.Build(kv.Value);
-                        this.cells.Add(kv.Key, new Cell { Key = kv.Key, Context = context, Overlay = overlay });
-                        if (!(overlay is null))
+                        if(e.NewItems is IList newItems)
                         {
-                            overlay.DataContext = context;
-                            this.LogicalChildren.Add(overlay);
+                            foreach (KeyValuePair<K, V> kv in newItems)
+                            {
+                                var context = this.MakeElementContext(kv.Key, kv.Value);
+                                var overlay = kv.Value is null ? null : this.OverlayTemplates.Build(kv.Value);
+                                this.cells.Add(kv.Key, new Cell { Key = kv.Key, Context = context, Overlay = overlay });
+                                if (overlay is not null)
+                                {
+                                    overlay.DataContext = context;
+                                    this.LogicalChildren.Add(overlay);
+                                }
+                            }
                         }
                     }
                     break;
@@ -163,22 +169,29 @@ namespace SciTwi.UI.Controls.Plotting
                     break;
 
                 case NotifyCollectionChangedAction.Remove:
-                    foreach (KeyValuePair<K, V> kv in e.OldItems)
                     {
-                        var overlay = this.cells?[kv.Key].Overlay;
-                        if (overlay is not null)
-                            this.LogicalChildren.Remove(overlay);
-                        if (this.cells is not null)
-                            this.cells.Remove(kv.Key);
+                        if(e.OldItems is IList oldItems)
+                        {
+                            foreach (KeyValuePair<K, V> kv in oldItems)
+                            {
+                                var overlay = this.cells?[kv.Key].Overlay;
+                                if (overlay is not null)
+                                    this.LogicalChildren.Remove(overlay);
+                                if (this.cells is not null)
+                                    this.cells.Remove(kv.Key);
+                            }
+                        }
                     }
                     break;
 
                 case NotifyCollectionChangedAction.Replace:
-                    for (var i = 0; i < e.OldItems.Count; ++i)
                     {
-                        var src = (KeyValuePair<K, V>)e.OldItems[i];
-                        var dst = (KeyValuePair<K, V>)e.NewItems[i];
-                        this.cells[src.Key].Context.Value = dst.Value;
+                        if(e.OldItems is IList oldItems && e.NewItems is IList newItems && oldItems.Count == newItems.Count)
+                        {
+                            for (var i = 0; i < newItems.Count; ++i)
+                                if(oldItems[i] is KeyValuePair<K, V> src && newItems is KeyValuePair<K, V> dst)
+                                    this.cells[src.Key].Context.Value = dst.Value;
+                        }
                     }
                     break;
 

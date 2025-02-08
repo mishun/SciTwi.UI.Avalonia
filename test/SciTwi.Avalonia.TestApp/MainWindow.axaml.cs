@@ -4,7 +4,6 @@ using Avalonia;
 using Avalonia.Controls;
 using ReactiveUI;
 using SciTwi.UI.Controls.Plotting;
-using SciTwi.UI.Rendering;
 
 namespace SciTwi.Avalonia
 {

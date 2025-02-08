@@ -59,13 +59,13 @@ public sealed class OverlayItems : OverlayBase
     }
 
 
-    private void TemplatesChanged(object sender, NotifyCollectionChangedEventArgs e)
+    private void TemplatesChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
         this.RegenerateLayers(items);
         this.NotifyReRender();
     }
 
-    private void ItemsCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+    private void ItemsCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
         this.RegenerateLayers(this.items);
         this.NotifyReRender();
